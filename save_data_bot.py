@@ -15,7 +15,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("SAVE_BOT_TOKEN")
 
 
 logging.basicConfig(level=logging.INFO)
