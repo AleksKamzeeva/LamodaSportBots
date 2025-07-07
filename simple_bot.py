@@ -52,9 +52,9 @@ start_keyboard.add(KeyboardButton("🚀 Нет товара"))
 
 cities = [
     "Абакан", "Архангельск", "Брянск", "Екатеринбург", "Геленджик", "Иркутск", "Ижевск",
-    "Калуга", "Казань", "Киров", "Краснодар", "Красноярск", "Липецк", "Москва",
-    "Нижний Новгород", "Новокузнецк", "Новороссийск", "Новосибирск", "Обнинск", "Омск",
-    "Пермь", "Ростов-на-Дону", "Санкт-Петербург", "Саратов", "Сочи", "Сургут",
+    "Калуга", "Казань", "Киров", "Краснодар", "Красноярск", "Липецк", "Москва и область",
+    "Нижний Новгород и область", "Новокузнецк", "Новороссийск", "Новосибирск", "Обнинск", "Омск",
+    "Пермь", "Ростов-на-Дону", "Санкт-Петербург и область", "Саратов", "Сочи", "Сургут",
     "Сыктывкар", "Тула", "Тюмень", "Владимир", "Волгоград", "Воронеж", "Ярославль",
     "Южно-Сахалинск"
 ]
@@ -83,22 +83,22 @@ async def process_city(message: types.Message, state: FSMContext):
     await message.reply("Теперь введи бренд:", reply_markup=ReplyKeyboardRemove())
     await RequestForm.brand.set()
 
-@dp.message_handler(state=RequestForm.brand)
-async def process_brand(message: types.Message, state: FSMContext):
-    await state.update_data(brand=message.text)
-    await message.reply("Введи размер (можно пропустить):")
-    await RequestForm.size.set()
-
 @dp.message_handler(state=RequestForm.size)
-async def process_size(message: types.Message, state: FSMContext):
+async def process_brand(message: types.Message, state: FSMContext):
     await state.update_data(size=message.text)
-    await message.reply("Введи модель (можно пропустить):")
+    await message.reply("Введи модель:")
     await RequestForm.model.set()
 
-@dp.message_handler(state=RequestForm.model)
+@dp.message_handler(state=RequestForm.brand)
 async def process_model(message: types.Message, state: FSMContext):
+    await state.update_data(brand=message.text)
+    await message.reply("Введи размер:")
+    await RequestForm.size.set()
+
+@dp.message_handler(state=RequestForm.model)
+async def process_size(message: types.Message, state: FSMContext):
     await state.update_data(model=message.text)
-    await message.reply("Введи цвет (можно пропустить):")
+    await message.reply("Введи цвет:")
     await RequestForm.color.set()
 
 @dp.message_handler(state=RequestForm.color)
