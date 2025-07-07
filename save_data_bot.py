@@ -12,9 +12,15 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 import os
+from dotenv import load_dotenv
 
-API_TOKEN = "7973934914:AAGUArS7UqwS4AaJQWMoWgJsLugNQ3M7EWY"
-bot = Bot(token=API_TOKEN)
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+
+logging.basicConfig(level=logging.INFO)
+
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 DB_PATH = "requests.db"
