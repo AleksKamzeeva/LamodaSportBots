@@ -9,8 +9,12 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from aiogram.utils import executor
+import os
+from dotenv import load_dotenv
 
-API_TOKEN = '8188220987:AAE_tueTjCpoYxF42jUtN9e4ub3pmXdAzLE'
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
 
 logging.basicConfig(level=logging.INFO)
 
