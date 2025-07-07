@@ -18,3 +18,4 @@ typing_extensions==4.14.1
 wheel==0.45.1
 yarl==1.20.1
 aiogram==2.25.1
+python-dotenv
