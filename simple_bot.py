@@ -18,7 +18,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 # --- База данных ---
