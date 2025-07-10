@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     city TEXT NOT NULL,
-    brand TEXT NOT NULL,
+    brand TEXT NOT NULL,  # Основное поле для бренда
+    is_custom BOOLEAN DEFAULT 0,  # Флаг кастомного бренда
     size TEXT,
     model TEXT,
     color TEXT,
@@ -93,6 +94,94 @@ for color in colors:
     emoji = color_emojis.get(color.lower(), "🎨")
     color_keyboard.add(KeyboardButton(f"{emoji} {color}"))
 
+brands = [
+    "361",
+    "adidas",
+    "adidas Originals",
+    "adidas YEEZY",
+    "Alo Yoga",
+    "Alpha Industries",
+    "ASICS",
+    "Bona Fide",
+    "Boss",
+    "Buff",
+    "Calvin Klein Performance",
+    "Calvin Klein Underwear",
+    "Carhartt WIP",
+    "Champion",
+    "Colmar",
+    "Cream Yoga",
+    "Deha",
+    "Diesel",
+    "EA7",
+    "Ecco",
+    "Etudes",
+    "Euphoria",
+    "Golden Goose",
+    "Gri",
+    "GTS",
+    "Haikure",
+    "Heroine Sport",
+    "Hike",
+    "Hoka One One",
+    "Hugo",
+    "Icepeak",
+    "Jogel",
+    "Jordan",
+    "Kerry",
+    "Krakatau",
+    "Lacoste",
+    "Lassie",
+    "Li-Ning",
+    "LumberJack",
+    "Luhta",
+    "Mademan",
+    "Mark Formelle",
+    "Mela",
+    "Mizuno",
+    "Nativos",
+    "New Balance",
+    "Nike",
+    "Nike ACG",
+    "Nux",
+    "Obey",
+    "Oakley",
+    "On",
+    "Peak",
+    "Premiata",
+    "PUMA",
+    "Reebok",
+    "Reima",
+    "Salomon",
+    "Saucony",
+    "Skandiwear",
+    "Solemate",
+    "Speedo",
+    "Sporty & Rich",
+    "Stone Island",
+    "The North Face",
+    "The Ragged Priest",
+    "TheJoggConcept",
+    "Ternua",
+    "Tyr",
+    "UGG",
+    "Uglow",
+    "Under Armour",
+    "Vans",
+    "Veja",
+    "Viking",
+    "Vtr",
+    "Wilson",
+    "Xtep",
+    "ZNY"
+]
+
+main_brands = [
+    "Nike", "adidas", "adidas Originals", "PUMA", "Reebok",
+    "New Balance", "Vans", "The North Face", "ASICS", "Champion"
+]
+other_brands = [b for b in brands if b not in main_brands]
+
 # --- Хендлеры ---
 
 @dp.message_handler(commands=["start"])
@@ -115,7 +204,44 @@ async def process_city(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
-    await state.update_data(brand=message.text)
+    user_input = message.text.strip()
+    
+    if user_input == "🔍 Поиск бренда":
+        await message.answer("Введите часть названия:", reply_markup=ReplyKeyboardRemove())
+        return
+    
+    if user_input == "✏️ Свой вариант":
+        await message.answer("Введите название бренда:", reply_markup=ReplyKeyboardRemove())
+        await RequestForm.custom_brand.set()
+        return
+    
+    # Проверяем вхождение без учета регистра
+    found = [b for b in brands if user_input.lower() in b.lower()]
+    
+    if found and user_input in brands:  # Точное совпадение
+        await state.update_data(brand=user_input, is_custom=0)
+        await proceed_to_model(message)
+    elif found:  # Похожие бренды
+        markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+        for brand in found[:5]:
+            markup.add(KeyboardButton(brand))
+        markup.add(KeyboardButton("✏️ Свой вариант"))
+        await message.answer("Уточните бренд:", reply_markup=markup)
+    else:
+        await message.answer("Бренд не найден. Введите свой вариант:")
+        await RequestForm.custom_brand.set()
+
+@dp.message_handler(state=RequestForm.custom_brand)
+async def process_custom_brand(message: types.Message, state: FSMContext):
+    custom_brand = message.text.strip()
+    
+    if len(custom_brand) < 2:
+        await message.answer("Минимум 2 символа. Попробуйте еще раз:")
+        return
+    
+    await state.update_data(brand=custom_brand, is_custom=1)
+    await message.answer(f"Бренд '{custom_brand}' принят")
+    await proceed_to_model(message)
     await message.reply("Введи модель:")
     await RequestForm.model.set()
 
@@ -144,22 +270,25 @@ async def process_color(message: types.Message, state: FSMContext):
     data = await state.get_data()
 
     # Сохраняем в БД
-    cursor.execute('''
-        INSERT INTO requests (user_id, city, brand, size, model, color, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+   cursor.execute('''
+    INSERT INTO requests 
+    (user_id, city, brand, is_custom, size, model, color, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         message.from_user.id,
         data['city'],
         data['brand'],
+        data.get('is_custom', 0),
         data.get('size'),
         data.get('model'),
-        data.get('color'),
+        message.text.split()[-1].lower(),
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
     conn.commit()
-
-    await message.reply("Спасибо! Запись сохранена. Чтобы внести ещё одну — снова нажми 🚀 Нет товара.", reply_markup=start_keyboard)
+    
+    await message.answer("Спасибо! Данные сохранены! Чтобы внести ещё одну — снова нажми 🚀 Нет товара.", reply_markup=start_keyboard)
     await state.finish()
+
 
 # --- Фильтр случайных сообщений до начала ---
 @dp.message_handler(state="*")
