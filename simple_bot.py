@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 load_dotenv()
 BOT_TOKEN = os.getenv("MAIN_BOT_TOKEN")
 
-
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=BOT_TOKEN)
@@ -59,19 +58,20 @@ cities = [
     "Южно-Сахалинск"
 ]
 
-color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-color_keyboard.add(*[KeyboardButton(color) for color in colors])
-
-colors = [
-    "бежевый", "белый", "бирюзовый", "бордовый", "голубой", 
-    "желтый", "зеленый", "золотой", "коралловый", "коричневый", 
-    "красный", "мультиколор", "оранжевый", "прозрачный", 
-    "розовый", "серебряный", "серый", "синий", "фиолетовый", 
-    "фуксия", "хаки", "черный", "другой"
+# Список доступных цветов
+COLORS = [
+    "бежевый", "белый", "бирюзовый", "бордовый", "голубой",
+    "желтый", "зеленый", "золотой", "коралловый", "коричневый",
+    "красный", "мультиколор", "оранжевый", "прозрачный", "розовый",
+    "серебряный", "серый", "синий", "фиолетовый", "фуксия",
+    "хаки", "черный", "другой"
 ]
 
 city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
 city_keyboard.add(*[KeyboardButton(city) for city in cities])
+
+color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+color_keyboard.add(*[KeyboardButton(color) for color in COLORS])
 
 # --- Хендлеры ---
 
@@ -94,39 +94,31 @@ async def process_city(message: types.Message, state: FSMContext):
     await message.reply("Теперь введи бренд:", reply_markup=ReplyKeyboardRemove())
     await RequestForm.brand.set()
 
-@dp.message_handler(state=RequestForm.size)
-async def process_brand(message: types.Message, state: FSMContext):
-    await state.update_data(size=message.text)
-    await message.reply("Введи модель:")
-    await RequestForm.model.set()
-
 @dp.message_handler(state=RequestForm.brand)
-async def process_model(message: types.Message, state: FSMContext):
+async def process_brand(message: types.Message, state: FSMContext):
     await state.update_data(brand=message.text)
     await message.reply("Введи размер:")
     await RequestForm.size.set()
 
-@dp.message_handler(state=RequestForm.model)
+@dp.message_handler(state=RequestForm.size)
 async def process_size(message: types.Message, state: FSMContext):
+    await state.update_data(size=message.text)
+    await message.reply("Введи модель:")
+    await RequestForm.model.set()
+
+@dp.message_handler(state=RequestForm.model)
+async def process_model(message: types.Message, state: FSMContext):
     await state.update_data(model=message.text)
-    await message.reply("Введи цвет:")
+    await message.reply("Выбери цвет из списка:", reply_markup=color_keyboard)
     await RequestForm.color.set()
 
-color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-color_keyboard.add(*[KeyboardButton(color) for color in colors])
-
 @dp.message_handler(state=RequestForm.color)
 async def process_color(message: types.Message, state: FSMContext):
-    print(f"[DEBUG] Получен цвет: {message.text}")
-    if message.text not in colors:
-        await message.reply("Пожалуйста, выбери цвет из предложенного списка.")
+    if message.text.lower() not in COLORS:
+        await message.reply("Пожалуйста, выбери цвет из предложенного списка.", reply_markup=color_keyboard)
         return
-    await state.update_data(color=message.text)
- data = await state.get_data()
-
-@dp.message_handler(state=RequestForm.color)
-async def process_color(message: types.Message, state: FSMContext):
-    await state.update_data(color=message.text)
+    
+    await state.update_data(color=message.text.lower())
     data = await state.get_data()
 
     # Сохраняем в БД
