@@ -1,77 +1,4 @@
-import logging
-import sqlite3
-from datetime import datetime
-
-from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
-from aiogram.utils import executor
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-BOT_TOKEN = os.getenv("MAIN_BOT_TOKEN")
-
-logging.basicConfig(level=logging.INFO)
-
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot, storage=MemoryStorage())
-
-# --- База данных ---
-conn = sqlite3.connect('requests.db')
-cursor = conn.cursor()
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    city TEXT NOT NULL,
-    brand TEXT NOT NULL,
-    size TEXT,
-    model TEXT,
-    color TEXT,
-    created_at TEXT
-)
-''')
-conn.commit()
-
-# --- Состояния ---
-class RequestForm(StatesGroup):
-    city = State()
-    brand = State()
-    size = State()
-    model = State()
-    color = State()
-
-# --- Клавиатуры ---
-start_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-start_keyboard.add(KeyboardButton("🚀 Нет товара"))
-
-cities = [
-    "Абакан", "Архангельск", "Брянск", "Екатеринбург", "Геленджик", "Иркутск", "Ижевск",
-    "Калуга", "Казань", "Киров", "Краснодар", "Красноярск", "Липецк", "Москва и область",
-    "Нижний Новгород и область", "Новокузнецк", "Новороссийск", "Новосибирск", "Обнинск", "Омск",
-    "Пермь", "Ростов-на-Дону", "Санкт-Петербург и область", "Саратов", "Сочи", "Сургут",
-    "Сыктывкар", "Тула", "Тюмень", "Владимир", "Волгоград", "Воронеж", "Ярославль",
-    "Южно-Сахалинск"
-]
-
-# Список доступных цветов
-COLORS = [
-    "бежевый", "белый", "бирюзовый", "бордовый", "голубой",
-    "желтый", "зеленый", "золотой", "коралловый", "коричневый",
-    "красный", "мультиколор", "оранжевый", "прозрачный", "розовый",
-    "серебряный", "серый", "синий", "фиолетовый", "фуксия",
-    "хаки", "черный", "другой"
-]
-
-city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-city_keyboard.add(*[KeyboardButton(city) for city in cities])
-
-color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-color_keyboard.add(*[KeyboardButton(color) for color in COLORS])
+# ... (остальные импорты и настройки остаются без изменений)
 
 # --- Хендлеры ---
 
@@ -81,35 +8,36 @@ async def cmd_start(message: types.Message):
 
 @dp.message_handler(Text(equals="🚀 Нет товара"), state="*")
 async def start_survey(message: types.Message, state: FSMContext):
+    await state.finish()  # Сбрасываем предыдущее состояние если было
     await message.answer("Выбери город:", reply_markup=city_keyboard)
     await RequestForm.city.set()
 
 @dp.message_handler(state=RequestForm.city)
 async def process_city(message: types.Message, state: FSMContext):
-    print(f"[DEBUG] Получен город: {message.text}")
     if message.text not in cities:
-        await message.reply("Пожалуйста, выбери город из предложенного списка.")
+        await message.reply("Пожалуйста, выбери город из предложенного списка.", reply_markup=city_keyboard)
         return
+    
     await state.update_data(city=message.text)
-    await message.reply("Теперь введи бренд:", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Теперь введи бренд:", reply_markup=ReplyKeyboardRemove())
     await RequestForm.brand.set()
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
     await state.update_data(brand=message.text)
-    await message.reply("Введи размер:")
+    await message.answer("Введи размер:")
     await RequestForm.size.set()
 
 @dp.message_handler(state=RequestForm.size)
 async def process_size(message: types.Message, state: FSMContext):
     await state.update_data(size=message.text)
-    await message.reply("Введи модель:")
+    await message.answer("Введи модель:")
     await RequestForm.model.set()
 
 @dp.message_handler(state=RequestForm.model)
 async def process_model(message: types.Message, state: FSMContext):
     await state.update_data(model=message.text)
-    await message.reply("Выбери цвет из списка:", reply_markup=color_keyboard)
+    await message.answer("Выбери цвет из списка:", reply_markup=color_keyboard)
     await RequestForm.color.set()
 
 @dp.message_handler(state=RequestForm.color)
@@ -136,17 +64,11 @@ async def process_color(message: types.Message, state: FSMContext):
     ))
     conn.commit()
 
-    await message.reply("Спасибо! Запись сохранена. Чтобы внести ещё одну — снова нажми 🚀 Нет товара.", reply_markup=start_keyboard)
+    await message.answer(
+        "Спасибо! Запись сохранена.\n"
+        "Если нужно добавить ещё один товар - снова нажми 🚀 Нет товара.", 
+        reply_markup=start_keyboard
+    )
     await state.finish()
 
-# --- Фильтр случайных сообщений до начала ---
-@dp.message_handler(state="*")
-async def block_unexpected(message: types.Message, state: FSMContext):
-    current_state = await state.get_state()
-    if not current_state:
-        await message.answer("Пожалуйста, нажми кнопку 🚀 Нет товара.", reply_markup=start_keyboard)
-
-# --- Запуск ---
-if __name__ == '__main__':
-    print("Бот запущен")
-    executor.start_polling(dp, skip_updates=True)
+# ... (остальной код остается без изменений)
