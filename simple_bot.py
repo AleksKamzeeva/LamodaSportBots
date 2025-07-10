@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 load_dotenv()
 BOT_TOKEN = os.getenv("MAIN_BOT_TOKEN")
 
-
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=BOT_TOKEN)
@@ -42,8 +41,8 @@ conn.commit()
 class RequestForm(StatesGroup):
     city = State()
     brand = State()
-    size = State()
     model = State()
+    size = State()
     color = State()
 
 # --- Клавиатуры ---
@@ -75,7 +74,6 @@ async def start_survey(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=RequestForm.city)
 async def process_city(message: types.Message, state: FSMContext):
-    print(f"[DEBUG] Получен город: {message.text}")
     if message.text not in cities:
         await message.reply("Пожалуйста, выбери город из предложенного списка.")
         return
@@ -83,21 +81,21 @@ async def process_city(message: types.Message, state: FSMContext):
     await message.reply("Теперь введи бренд:", reply_markup=ReplyKeyboardRemove())
     await RequestForm.brand.set()
 
-@dp.message_handler(state=RequestForm.size)
+@dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
-    await state.update_data(size=message.text)
+    await state.update_data(brand=message.text)
     await message.reply("Введи модель:")
     await RequestForm.model.set()
 
-@dp.message_handler(state=RequestForm.brand)
+@dp.message_handler(state=RequestForm.model)
 async def process_model(message: types.Message, state: FSMContext):
-    await state.update_data(brand=message.text)
+    await state.update_data(model=message.text)
     await message.reply("Введи размер:")
     await RequestForm.size.set()
 
-@dp.message_handler(state=RequestForm.model)
+@dp.message_handler(state=RequestForm.size)
 async def process_size(message: types.Message, state: FSMContext):
-    await state.update_data(model=message.text)
+    await state.update_data(size=message.text)
     await message.reply("Введи цвет:")
     await RequestForm.color.set()
 
