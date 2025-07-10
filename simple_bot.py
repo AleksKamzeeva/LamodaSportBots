@@ -61,6 +61,17 @@ cities = [
 city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
 city_keyboard.add(*[KeyboardButton(city) for city in cities])
 
+colors = [
+    "бежевый", "белый", "бирюзовый", "бордовый", "голубой",
+    "желтый", "зеленый", "золотой", "коралловый", "коричневый",
+    "красный", "мультиколор", "оранжевый", "прозрачный", "розовый",
+    "серебряный", "серый", "синий", "фиолетовый", "фуксия",
+    "хаки", "черный", "другой"
+]
+
+color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+color_keyboard.add(*[KeyboardButton(color) for color in colors])
+
 # --- Хендлеры ---
 
 @dp.message_handler(commands=["start"])
@@ -96,11 +107,16 @@ async def process_model(message: types.Message, state: FSMContext):
 @dp.message_handler(state=RequestForm.size)
 async def process_size(message: types.Message, state: FSMContext):
     await state.update_data(size=message.text)
-    await message.reply("Введи цвет:")
+    await message.reply("Выберите цвет:", reply_markup=color_keyboard)
     await RequestForm.color.set()
 
 @dp.message_handler(state=RequestForm.color)
 async def process_color(message: types.Message, state: FSMContext):
+    # Проверяем, что выбранный цвет есть в списке
+    if message.text.lower() not in colors:
+        await message.reply("Пожалуйста, выберите цвет из предложенного списка.")
+        return
+        
     await state.update_data(color=message.text)
     data = await state.get_data()
 
