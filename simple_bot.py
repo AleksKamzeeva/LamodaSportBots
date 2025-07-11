@@ -217,7 +217,7 @@ async def process_city(message: types.Message, state: FSMContext):
         await message.answer("Выбери магазин:", reply_markup=moscow_shop_keyboard)
         await RequestForm.shop.set()  
     else:
-        await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
+        await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
         await RequestForm.brand.set()
 
 @dp.message_handler(state=RequestForm.brand)
