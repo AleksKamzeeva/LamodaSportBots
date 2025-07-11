@@ -272,7 +272,7 @@ async def process_color(message: types.Message, state: FSMContext):
     cursor.execute('''
        INSERT INTO requests 
     (user_id, city, shop, brand, is_custom, size, model, color, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         message.from_user.id,
         data['city'],
