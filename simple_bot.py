@@ -188,6 +188,8 @@ for brand in main_brands:
     main_brands_keyboard.insert(KeyboardButton(brand))
 main_brands_keyboard.add(KeyboardButton("✏️ Ввести другой бренд"))
 
+
+
 # --- Хендлеры ---
 
 @dp.message_handler(commands=["start"])
@@ -210,34 +212,29 @@ async def process_city(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
-    # ---Если пользователь хочет ввести свой бренд ---
     if message.text == "✏️ Ввести другой бренд":
         await message.answer("Введите название бренда:", reply_markup=ReplyKeyboardRemove())
-        await RequestForm.custom_brand.set()
+        await RequestForm.custom_brand.set()  # Переходим в состояние для кастомного бренда
         return
     
-     # ---Если выбрал бренд из списка ---
     if message.text in main_brands:
         await state.update_data(brand=message.text, is_custom=0)
-        await proceed_to_model(message)
+        await message.answer(f"Выбран бренд: {message.text}. Теперь введите модель", reply_markup=ReplyKeyboardRemove())
+        await RequestForm.model.set() 
     else:
         await message.answer("Пожалуйста, выберите бренд из списка или нажмите 'Ввести другой бренд'", 
-                          reply_markup=main_brands_keyboard)
+                          reply_markup=brands_keyboard)
 
 @dp.message_handler(state=RequestForm.custom_brand)
 async def process_custom_brand(message: types.Message, state: FSMContext):
     custom_brand = message.text.strip()
     
     if len(custom_brand) < 2:
-        await message.answer("Название должно содержать минимум 2 символа. Попробуйте еще раз:")
+        await message.answer("Название бренда должно содержать минимум 2 символа. Попробуйте еще раз:")
         return
     
     await state.update_data(brand=custom_brand, is_custom=1)
-    await message.answer(f"Бренд '{custom_brand}' сохранён")
-    await proceed_to_model(message)
-
-async def proceed_to_model(message: types.Message):
-    await message.answer("Теперь введите модель товара:", reply_markup=ReplyKeyboardRemove())
+    await message.answer(f"Бренд '{custom_brand}' сохранен. Теперь введите модель:", reply_markup=ReplyKeyboardRemove())
     await RequestForm.model.set()
 
 @dp.message_handler(state=RequestForm.model)
