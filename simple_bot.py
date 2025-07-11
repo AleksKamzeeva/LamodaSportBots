@@ -192,7 +192,7 @@ main_brands_keyboard.add(KeyboardButton("✏️ Ввести другой бре
 
 @dp.message_handler(commands=["start"])
 async def cmd_start(message: types.Message):
-    await message.answer("Добро пожаловать! Нажми кнопку "Нет товара", чтобы начать:", reply_markup=start_keyboard)
+    await message.answer("Добро пожаловать! Нажми кнопку Нет товара, чтобы начать:", reply_markup=start_keyboard)
 
 @dp.message_handler(Text(equals="🚀 Нет товара"), state="*")
 async def start_survey(message: types.Message, state: FSMContext):
