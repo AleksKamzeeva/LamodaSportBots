@@ -89,7 +89,7 @@ color_emojis = {
     "другой": "🎨"
 }
 
-# Создаем клавиатуру с эмодзи
+# --- Создаем клавиатуру с эмодзи
 color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
 for color in colors:
     emoji = color_emojis.get(color.lower(), "🎨")
@@ -216,7 +216,7 @@ async def process_brand(message: types.Message, state: FSMContext):
         await RequestForm.custom_brand.set()
         return
     
-    # Проверяем вхождение без учета регистра
+    # --- Проверяем вхождение без учета регистра
     found = [b for b in brands if user_input.lower() in b.lower()]
     
     if found and user_input in brands:  # Точное совпадение
@@ -270,7 +270,7 @@ async def process_color(message: types.Message, state: FSMContext):
     await state.update_data(color=message.text)
     data = await state.get_data()
 
-    # Сохраняем в БД
+    # --- Сохраняем в БД
     cursor.execute('''
        INSERT INTO requests 
     (user_id, city, brand, is_custom, size, model, color, created_at)
