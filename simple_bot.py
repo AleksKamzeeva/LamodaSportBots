@@ -83,11 +83,25 @@ moscow_shops = [
     "Саларис",
     "Савеловский",
     "Сокольники"
+    "Fashion House",
+    "Белая дача",
+    "Белая дача Urban",
+    "Новая Рига",
+    "Vegas Каширское",
+    "Vegas Кунцево",
+    "Vegas Сити",
+    "Красный Кит",
+    "XL",
+    "Акварель"
 ]
 
 moscow_shop_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
 moscow_shop_keyboard.add(*[KeyboardButton(shop) for shop in moscow_shops])
 
+surgut_shops = ["Аура", "Росич"]
+
+surgut_shop_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+surgut_shop_keyboard.add(*[KeyboardButton(shop) for shop in surgut_shops])
 
 colors = [
     "черный", "белый", "серый", "бежевый", "желтый",
@@ -96,7 +110,6 @@ colors = [
     "синий", "фиолетовый", "другой"
 ]
 
-# --- Создаем клавиатуру с эмодзи
 color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
 color_keyboard.add(*[KeyboardButton(color) for color in colors])
 
@@ -223,6 +236,23 @@ async def process_city(message: types.Message, state: FSMContext):
 @dp.message_handler(state=RequestForm.shop)
 async def process_shop(message: types.Message, state: FSMContext):
     if message.text not in moscow_shops:
+        await message.reply("Пожалуйста, выбери магазин из списка.")
+        return
+    
+    await state.update_data(shop=message.text)
+    await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
+    await RequestForm.brand.set()
+
+    if message.text == "Сургут":
+        await message.answer("Выбери магазин:", reply_markup=surgut_shop_keyboard)
+        await RequestForm.shop.set()  
+    else:
+        await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
+        await RequestForm.brand.set()
+        
+@dp.message_handler(state=RequestForm.shop)
+async def process_shop(message: types.Message, state: FSMContext):
+    if message.text not in surgut_shops:
         await message.reply("Пожалуйста, выбери магазин из списка.")
         return
     
