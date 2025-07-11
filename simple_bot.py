@@ -271,7 +271,7 @@ async def process_color(message: types.Message, state: FSMContext):
 
     # Сохраняем в БД
    cursor.execute('''
-    INSERT INTO requests 
+       INSERT INTO requests 
     (user_id, city, brand, is_custom, size, model, color, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
@@ -281,14 +281,13 @@ async def process_color(message: types.Message, state: FSMContext):
         data.get('is_custom', 0),
         data.get('size'),
         data.get('model'),
-        message.text.split()[-1].lower(),
+        selected_color
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
     conn.commit()
     
     await message.answer("Спасибо! Данные сохранены! Чтобы внести ещё одну — снова нажми 🚀 Нет товара.", reply_markup=start_keyboard)
     await state.finish()
-
 
 # --- Фильтр случайных сообщений до начала ---
 @dp.message_handler(state="*")
