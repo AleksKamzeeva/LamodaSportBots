@@ -60,7 +60,7 @@ cities = [
     "Южно-Сахалинск"
 ]
 
-city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
 city_keyboard.add(*[KeyboardButton(city) for city in cities])
 
 colors = [
@@ -90,7 +90,7 @@ color_emojis = {
 }
 
 # --- Создаем клавиатуру с эмодзи
-color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
 for color in colors:
     emoji = color_emojis.get(color.lower(), "🎨")
     color_keyboard.add(KeyboardButton(f"{emoji} {color}"))
@@ -183,11 +183,16 @@ main_brands = [
 ]
 other_brands = [b for b in brands if b not in main_brands]
 
+main_brands_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+for brand in main_brands:
+    main_brands_keyboard.insert(KeyboardButton(brand))
+main_brands_keyboard.add(KeyboardButton("✏️ Ввести другой бренд"))
+
 # --- Хендлеры ---
 
 @dp.message_handler(commands=["start"])
 async def cmd_start(message: types.Message):
-    await message.answer("Добро пожаловать! Нажми кнопку ниже, чтобы начать:", reply_markup=start_keyboard)
+    await message.answer("Добро пожаловать! Нажми кнопку "Нет товара", чтобы начать:", reply_markup=start_keyboard)
 
 @dp.message_handler(Text(equals="🚀 Нет товара"), state="*")
 async def start_survey(message: types.Message, state: FSMContext):
@@ -200,50 +205,39 @@ async def process_city(message: types.Message, state: FSMContext):
         await message.reply("Пожалуйста, выбери город из предложенного списка.")
         return
     await state.update_data(city=message.text)
-    await message.reply("Теперь введи бренд:", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
     await RequestForm.brand.set()
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
-    user_input = message.text.strip()
-    
-    if user_input == "🔍 Поиск бренда":
-        await message.answer("Введите часть названия:", reply_markup=ReplyKeyboardRemove())
-        return
-    
-    if user_input == "✏️ Свой вариант":
+    # ---Если пользователь хочет ввести свой бренд ---
+    if message.text == "✏️ Ввести другой бренд":
         await message.answer("Введите название бренда:", reply_markup=ReplyKeyboardRemove())
         await RequestForm.custom_brand.set()
         return
     
-    # --- Проверяем вхождение без учета регистра
-    found = [b for b in brands if user_input.lower() in b.lower()]
-    
-    if found and user_input in brands:  
-        await state.update_data(brand=user_input, is_custom=0)
+     # ---Если выбрал бренд из списка ---
+    if message.text in main_brands:
+        await state.update_data(brand=message.text, is_custom=0)
         await proceed_to_model(message)
-    elif found:  # Похожие бренды
-        markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-        for brand in found[:5]:
-            markup.add(KeyboardButton(brand))
-        markup.add(KeyboardButton("✏️ Свой вариант"))
-        await message.answer("Уточните бренд:", reply_markup=markup)
     else:
-        await message.answer("Бренд не найден. Введите свой вариант:")
-        await RequestForm.custom_brand.set()
+        await message.answer("Пожалуйста, выберите бренд из списка или нажмите 'Ввести другой бренд'", 
+                          reply_markup=main_brands_keyboard)
 
 @dp.message_handler(state=RequestForm.custom_brand)
 async def process_custom_brand(message: types.Message, state: FSMContext):
     custom_brand = message.text.strip()
     
     if len(custom_brand) < 2:
-        await message.answer("Минимум 2 символа. Попробуйте еще раз:")
+        await message.answer("Название должно содержать минимум 2 символа. Попробуйте еще раз:")
         return
     
     await state.update_data(brand=custom_brand, is_custom=1)
-    await message.answer(f"Бренд '{custom_brand}' принят")
+    await message.answer(f"Бренд '{custom_brand}' сохранён")
     await proceed_to_model(message)
-    await message.reply("Введи модель:")
+
+async def proceed_to_model(message: types.Message):
+    await message.answer("Теперь введите модель товара:", reply_markup=ReplyKeyboardRemove())
     await RequestForm.model.set()
 
 @dp.message_handler(state=RequestForm.model)
