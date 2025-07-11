@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     city TEXT NOT NULL,
+    shop TEXT,
     brand TEXT NOT NULL,
     is_custom BOOLEAN DEFAULT 0,  
     size TEXT,
@@ -41,6 +42,7 @@ conn.commit()
 # --- Состояния ---
 class RequestForm(StatesGroup):
     city = State()
+    shop = State()
     brand = State()
     custom_brand = State()
     model = State()
@@ -62,6 +64,30 @@ cities = [
 
 city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
 city_keyboard.add(*[KeyboardButton(city) for city in cities])
+
+moscow_shops = [
+    "Афимолл",
+    "Атриум",
+    "Авиапарк",
+    "Европолис",
+    "Измайловский Пассаж",
+    "Каширская Плаза",
+    "Кузнецкий мост",
+    "Колумбус",
+    "Красная Пресня",
+    "Метрополис",
+    "Охотный ряд",
+    "Орджоникидзе",
+    "Павелецкая Плаза",
+    "РИО",
+    "Саларис",
+    "Савеловский",
+    "Сокольники"
+]
+
+moscow_shop_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+moscow_shop_keyboard.add(*[KeyboardButton(shop) for shop in moscow_shops])
+
 
 colors = [
     "черный", "белый", "серый", "бежевый", "желтый",
@@ -186,8 +212,13 @@ async def process_city(message: types.Message, state: FSMContext):
         await message.reply("Пожалуйста, выбери город из предложенного списка.")
         return
     await state.update_data(city=message.text)
-    await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
-    await RequestForm.brand.set()
+
+    if message.text == "Москва и область":
+        await message.answer("Выбери магазин:", reply_markup=moscow_shop_keyboard)
+        await RequestForm.shop.set()  
+    else:
+        await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
+        await RequestForm.brand.set()
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
@@ -245,6 +276,7 @@ async def process_color(message: types.Message, state: FSMContext):
     ''', (
         message.from_user.id,
         data['city'],
+        data.get('shop'),
         data['brand'],
         data.get('is_custom', 0),
         data.get('size'),
