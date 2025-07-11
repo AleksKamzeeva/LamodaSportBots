@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     city TEXT NOT NULL,
-    brand TEXT NOT NULL,  
-    is_custom BOOLEAN DEFAULT 0,  
+    brand TEXT NOT NULL,
+    is_custom BOOLEAN DEFAULT 0,  # Этот столбец теперь точно будет создан
     size TEXT,
     model TEXT,
     color TEXT,
