@@ -42,6 +42,7 @@ conn.commit()
 class RequestForm(StatesGroup):
     city = State()
     brand = State()
+    custom_brand = State()
     model = State()
     size = State()
     color = State()
@@ -281,7 +282,7 @@ async def process_color(message: types.Message, state: FSMContext):
         data.get('is_custom', 0),
         data.get('size'),
         data.get('model'),
-        selected_color
+        message.text.split(maxsplit=1)[-1].lower()
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
     conn.commit()
