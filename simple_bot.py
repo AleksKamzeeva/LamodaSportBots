@@ -70,30 +70,9 @@ colors = [
     "синий", "фиолетовый", "другой"
 ]
 
-color_emojis = {
-    "черный": "⚫️",
-    "белый": "⚪️",
-    "серый": "🔘",
-    "бежевый": "🟤",
-    "желтый": "🟡",
-    "зеленый": "🟢",
-    "голубой": "🔵",
-    "коричневый": "🟤",
-    "красный": "🔴",
-    "мультиколор": "🌈",
-    "оранжевый": "🟠",
-    "прозрачный": "💠",
-    "розовый": "🌸",
-    "синий": "🔵",
-    "фиолетовый": "🟣",
-    "другой": "🎨"
-}
-
 # --- Создаем клавиатуру с эмодзи
 color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-for color in colors:
-    emoji = color_emojis.get(color.lower(), "🎨")
-    color_keyboard.add(KeyboardButton(f"{emoji} {color}"))
+color_keyboard.add(KeyboardButton(color) for color in colors)
 
 brands = [
     "361",
@@ -251,17 +230,10 @@ async def process_size(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=RequestForm.color)
 async def process_color(message: types.Message, state: FSMContext):
-    selected_color = None
-    for color in colors:
-        if color in message.text:  
-            selected_color = color
-            break
-    
-    if not selected_color:
-        await message.reply("Пожалуйста, выберите цвет из предложенного списка.")
+        if message.text not in colors:
+        await message.reply("Пожалуйста, выбери цвет из предложенного списка.")
         return
-        
-    await state.update_data(color=selected_color)
+    await state.update_data(color=message.text)
     data = await state.get_data()
 
     # --- Сохраняем в БД
@@ -276,7 +248,7 @@ async def process_color(message: types.Message, state: FSMContext):
         data.get('is_custom', 0),
         data.get('size'),
         data.get('model'),
-        selected_color,
+        data.get('color'),
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
     conn.commit()
