@@ -55,17 +55,8 @@ start_keyboard.add(KeyboardButton("🚀 Нет товара"))
 
 cities = [
     "Абакан", "Архангельск", "Брянск", "Екатеринбург", "Геленджик", "Иркутск", "Ижевск",
-    "Калуга", "Казань", "Киров", "Краснодар", "Красноярск", "Липецк", "Москва и область",
-    "Нижний Новгород и область", "Новокузнецк", "Новороссийск", "Новосибирск", "Обнинск", "Омск",
-    "Пермь", "Ростов-на-Дону", "Санкт-Петербург и область", "Саратов", "Сочи", "Сургут",
-    "Сыктывкар", "Тула", "Тюмень", "Владимир", "Волгоград", "Воронеж", "Ярославль",
-    "Южно-Сахалинск"
-]
-
-city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-city_keyboard.add(*[KeyboardButton(city) for city in cities])
-
-moscow_shops = [
+    "Калуга", "Казань", "Киров", "Краснодар", "Красноярск", "Липецк", 
+    "Москва и область": [
     "Афимолл",
     "Атриум",
     "Авиапарк",
@@ -93,15 +84,17 @@ moscow_shops = [
     "Красный Кит",
     "XL",
     "Акварель"
+],
+    "Нижний Новгород и область", "Новокузнецк", "Новороссийск", "Новосибирск", "Обнинск", "Омск",
+    "Пермь", "Ростов-на-Дону", "Санкт-Петербург и область", "Саратов", "Сочи", "Сургут": ["Аура", "Росич"],
+    "Сыктывкар", "Тула", "Тюмень", "Владимир", "Волгоград", "Воронеж", "Ярославль",
+    "Южно-Сахалинск"
 ]
 
-moscow_shop_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-moscow_shop_keyboard.add(*[KeyboardButton(shop) for shop in moscow_shops])
-
-surgut_shops = ["Аура", "Росич"]
-
-surgut_shop_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-surgut_shop_keyboard.add(*[KeyboardButton(shop) for shop in surgut_shops])
+shop_keyboards = {
+    city: ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(*[KeyboardButton(shop) for shop in shops])
+    for city, shops in city_shops.items()
+}
 
 colors = [
     "черный", "белый", "серый", "бежевый", "желтый",
@@ -219,32 +212,35 @@ async def start_survey(message: types.Message, state: FSMContext):
     await message.answer("Выбери город:", reply_markup=city_keyboard)
     await RequestForm.city.set()
 
+
 @dp.message_handler(state=RequestForm.city)
 async def process_city(message: types.Message, state: FSMContext):
     if message.text not in cities:
         await message.reply("Пожалуйста, выбери город из предложенного списка.")
         return
+    
     await state.update_data(city=message.text)
-
-    if message.text == "Москва и область":
-        await message.answer("Выбери магазин:", reply_markup=moscow_shop_keyboard)
-         await RequestForm.shop.set() 
-    if message.text == "Сургут":
-        await message.answer("Выбери магазин:", reply_markup=surgut_shop_keyboard)
-        await RequestForm.shop.set() 
-        
+    
+    if message.text in city_shops:
+        await message.answer(f"Выбери магазин в {message.text}:", 
+                           reply_markup=shop_keyboards[message.text])
+        await RequestForm.shop.set()
     else:
         await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
         await RequestForm.brand.set()
-        
+
 @dp.message_handler(state=RequestForm.shop)
 async def process_shop(message: types.Message, state: FSMContext):
-    if message.text not in moscow_shops or surgut_shops:
-        await message.reply("Пожалуйста, выбери магазин из списка.")
+    data = await state.get_data()
+    city = data['city']
+    
+    if city not in city_shops or message.text not in city_shops[city]:
+        await message.reply(f"Пожалуйста, выбери магазин из списка для {city}.", 
+                          reply_markup=shop_keyboards[city])
         return
-  
+    
     await state.update_data(shop=message.text)
-    await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
+    await message.answer(f"Выбери бренд:", reply_markup=main_brands_keyboard)
     await RequestForm.brand.set()
 
 
