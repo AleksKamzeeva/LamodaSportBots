@@ -219,6 +219,17 @@ async def process_city(message: types.Message, state: FSMContext):
     else:
         await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
         await RequestForm.brand.set()
+        
+@dp.message_handler(state=RequestForm.shop)
+async def process_shop(message: types.Message, state: FSMContext):
+    if message.text not in moscow_shops:
+        await message.reply("Пожалуйста, выбери магазин из списка.")
+        return
+    
+    await state.update_data(shop=message.text)
+    await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
+    await RequestForm.brand.set()
+
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
