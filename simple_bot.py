@@ -230,9 +230,10 @@ async def process_size(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=RequestForm.color)
 async def process_color(message: types.Message, state: FSMContext):
-        if message.text not in colors:
+    if message.text not in colors:
         await message.reply("Пожалуйста, выбери цвет из предложенного списка.")
         return
+    
     await state.update_data(color=message.text)
     data = await state.get_data()
 
