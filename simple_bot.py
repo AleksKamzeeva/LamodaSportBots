@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     city TEXT NOT NULL,
-    brand TEXT NOT NULL,  # Основное поле для бренда
-    is_custom BOOLEAN DEFAULT 0,  # Флаг кастомного бренда
+    brand TEXT NOT NULL,  
+    is_custom BOOLEAN DEFAULT 0,  
     size TEXT,
     model TEXT,
     color TEXT,
@@ -219,7 +219,7 @@ async def process_brand(message: types.Message, state: FSMContext):
     # --- Проверяем вхождение без учета регистра
     found = [b for b in brands if user_input.lower() in b.lower()]
     
-    if found and user_input in brands:  # Точное совпадение
+    if found and user_input in brands:  
         await state.update_data(brand=user_input, is_custom=0)
         await proceed_to_model(message)
     elif found:  # Похожие бренды
