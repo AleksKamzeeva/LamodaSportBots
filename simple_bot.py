@@ -282,7 +282,7 @@ async def process_color(message: types.Message, state: FSMContext):
         data.get('is_custom', 0),
         data.get('size'),
         data.get('model'),
-        message.text.split(maxsplit=1)[-1].lower()
+        message.text.split(maxsplit=1)[-1].lower(),
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
     conn.commit()
