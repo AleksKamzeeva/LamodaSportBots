@@ -72,7 +72,7 @@ colors = [
 
 # --- Создаем клавиатуру с эмодзи
 color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-color_keyboard.add(KeyboardButton(color) for color in colors)
+color_keyboard.add(*[KeyboardButton(color) for color in colors])
 
 brands = [
     "361",
@@ -173,7 +173,7 @@ main_brands_keyboard.add(KeyboardButton("✏️ Ввести другой бре
 
 @dp.message_handler(commands=["start"])
 async def cmd_start(message: types.Message):
-    await message.answer("Добро пожаловать! Нажми кнопку Нет товара, чтобы начать:", reply_markup=start_keyboard)
+    await message.answer("Нажми кнопку Нет товара, чтобы начать:", reply_markup=start_keyboard)
 
 @dp.message_handler(Text(equals="🚀 Нет товара"), state="*")
 async def start_survey(message: types.Message, state: FSMContext):
@@ -192,16 +192,16 @@ async def process_city(message: types.Message, state: FSMContext):
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
     if message.text == "✏️ Ввести другой бренд":
-        await message.answer("Введите название бренда:", reply_markup=ReplyKeyboardRemove())
+        await message.answer("Выбери бренд:", reply_markup=ReplyKeyboardRemove())
         await RequestForm.custom_brand.set()  # Переходим в состояние для кастомного бренда
         return
     
     if message.text in main_brands:
         await state.update_data(brand=message.text, is_custom=0)
-        await message.answer(f"Выбран бренд: {message.text}. Теперь введите модель", reply_markup=ReplyKeyboardRemove())
+        await message.answer(f"Введи модель", reply_markup=ReplyKeyboardRemove())
         await RequestForm.model.set() 
     else:
-        await message.answer("Пожалуйста, выберите бренд из списка или нажмите 'Ввести другой бренд'", 
+        await message.answer("Пожалуйста, выбери бренд из списка или нажми 'Ввести другой бренд'", 
                           reply_markup=brands_keyboard)
 
 @dp.message_handler(state=RequestForm.custom_brand)
@@ -213,7 +213,7 @@ async def process_custom_brand(message: types.Message, state: FSMContext):
         return
     
     await state.update_data(brand=custom_brand, is_custom=1)
-    await message.answer(f"Бренд '{custom_brand}' сохранен. Теперь введите модель:", reply_markup=ReplyKeyboardRemove())
+    await message.answer(f"Введи модель:", reply_markup=ReplyKeyboardRemove())
     await RequestForm.model.set()
 
 @dp.message_handler(state=RequestForm.model)
@@ -225,7 +225,7 @@ async def process_model(message: types.Message, state: FSMContext):
 @dp.message_handler(state=RequestForm.size)
 async def process_size(message: types.Message, state: FSMContext):
     await state.update_data(size=message.text)
-    await message.reply("Выберите цвет:", reply_markup=color_keyboard)
+    await message.reply("Выбери цвет:", reply_markup=color_keyboard)
     await RequestForm.color.set()
 
 @dp.message_handler(state=RequestForm.color)
