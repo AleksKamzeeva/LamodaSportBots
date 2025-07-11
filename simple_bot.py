@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS requests (
     user_id INTEGER,
     city TEXT NOT NULL,
     brand TEXT NOT NULL,
-    is_custom BOOLEAN DEFAULT 0,  # Этот столбец теперь точно будет создан
+    is_custom BOOLEAN DEFAULT 0,  
     size TEXT,
     model TEXT,
     color TEXT,
