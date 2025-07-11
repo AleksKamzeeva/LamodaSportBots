@@ -228,34 +228,21 @@ async def process_city(message: types.Message, state: FSMContext):
 
     if message.text == "Москва и область":
         await message.answer("Выбери магазин:", reply_markup=moscow_shop_keyboard)
-        await RequestForm.shop.set()  
-    else:
-        await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
-        await RequestForm.brand.set()
-        
-@dp.message_handler(state=RequestForm.shop)
-async def process_shop(message: types.Message, state: FSMContext):
-    if message.text not in moscow_shops:
-        await message.reply("Пожалуйста, выбери магазин из списка.")
-        return
-    
-    await state.update_data(shop=message.text)
-    await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
-    await RequestForm.brand.set()
-
+         await RequestForm.shop.set() 
     if message.text == "Сургут":
         await message.answer("Выбери магазин:", reply_markup=surgut_shop_keyboard)
-        await RequestForm.shop.set()  
+        await RequestForm.shop.set() 
+        
     else:
         await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
         await RequestForm.brand.set()
         
 @dp.message_handler(state=RequestForm.shop)
 async def process_shop(message: types.Message, state: FSMContext):
-    if message.text not in surgut_shops:
+    if message.text not in moscow_shops or surgut_shops:
         await message.reply("Пожалуйста, выбери магазин из списка.")
         return
-    
+  
     await state.update_data(shop=message.text)
     await message.answer("Выберите бренд:", reply_markup=main_brands_keyboard)
     await RequestForm.brand.set()
