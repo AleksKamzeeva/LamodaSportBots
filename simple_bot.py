@@ -63,7 +63,7 @@ cities = {
 }
 
 city_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-city_keyboard.add(*[KeyboardButton(city) for city in cities])
+city_keyboard.add(*[KeyboardButton(city) for city in sorted(cities)])
 
 city_shops = {
     "Архангельск":["Макси", "Титан Арена"],
@@ -123,7 +123,7 @@ city_shops = {
 
 
 shop_keyboards = {
-    city: ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(*[KeyboardButton(shop) for shop in shops])
+    city: ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(*[KeyboardButton(shop) for shop in sorted(shops)])
     for city, shops in city_shops.items()
 }
 
