@@ -251,14 +251,17 @@ async def process_size(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=RequestForm.color)
 async def process_color(message: types.Message, state: FSMContext):
-    # Извлекаем название цвета без эмодзи
-    selected_color = message.text.split(maxsplit=1)[-1].lower()
+    selected_color = None
+    for color in colors:
+        if color in message.text:  
+            selected_color = color
+            break
     
-    if selected_color not in colors:
+    if not selected_color:
         await message.reply("Пожалуйста, выберите цвет из предложенного списка.")
         return
         
-    await state.update_data(color=message.text)
+    await state.update_data(color=selected_color)
     data = await state.get_data()
 
     # --- Сохраняем в БД
@@ -273,7 +276,7 @@ async def process_color(message: types.Message, state: FSMContext):
         data.get('is_custom', 0),
         data.get('size'),
         data.get('model'),
-        message.text.split(maxsplit=1)[-1].lower(),
+        selected_color,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
     conn.commit()
