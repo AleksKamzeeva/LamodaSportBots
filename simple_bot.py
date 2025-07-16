@@ -363,7 +363,7 @@ cursor.execute('''
             data['color'],
             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ))
-        conn.commit()
+conn.commit()
     
     await message.answer("Спасибо! Данные сохранены! Чтобы внести ещё одну — снова нажми 🚀 Нет товара.", reply_markup=start_keyboard)
     await state.finish()
