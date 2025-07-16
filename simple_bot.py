@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS requests (
     user_id INTEGER,
     city TEXT NOT NULL,
     shop TEXT,
+    category TEXT NOT NULL,
     brand TEXT NOT NULL,
     is_custom BOOLEAN DEFAULT 0,  
     size TEXT,
@@ -43,6 +44,7 @@ conn.commit()
 class RequestForm(StatesGroup):
     city = State()
     shop = State()
+    category = State()
     brand = State()
     custom_brand = State()
     model = State()
@@ -126,6 +128,12 @@ shop_keyboards = {
     city: ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(*[KeyboardButton(shop) for shop in sorted(shops)])
     for city, shops in city_shops.items()
 }
+
+categories = ["одежда", "обувь", "аксуссуары", "другая"]
+
+category_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+category_keyboard.add(*[KeyboardButton(category) for category in categories])
+
 
 colors = [
     "черный", "белый", "серый", "бежевый", "желтый",
@@ -264,8 +272,8 @@ async def process_city(message: types.Message, state: FSMContext):
                            reply_markup=shop_keyboards[message.text])
         await RequestForm.shop.set()
     else:
-        await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
-        await RequestForm.brand.set()
+        await message.answer("Выбери категорию:", reply_markup=main_brands_keyboard)
+        await RequestForm.category.set()
 
 @dp.message_handler(state=RequestForm.shop)
 async def process_shop(message: types.Message, state: FSMContext):
@@ -278,9 +286,16 @@ async def process_shop(message: types.Message, state: FSMContext):
         return
     
     await state.update_data(shop=message.text)
-    await message.answer(f"Выбери бренд:", reply_markup=main_brands_keyboard)
-    await RequestForm.brand.set()
-
+    await message.answer(f"Выбери категорию:", reply_markup=main_brands_keyboard)
+    await RequestForm.category.set()
+    
+@dp.message_handler(state=RequestForm.category)
+async def process_category(message: types.Message, state: FSMContext):
+    if message.text not in categories:
+        await message.reply("Пожалуйста, выбери категорию из предложенного списка.")
+        return
+        await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
+        await RequestForm.brand.set()
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
@@ -339,6 +354,7 @@ async def process_color(message: types.Message, state: FSMContext):
         message.from_user.id,
         data['city'],
         data.get('shop'),
+        data.get('category'),
         data['brand'],
         data.get('is_custom', 0),
         data.get('size'),
