@@ -347,7 +347,7 @@ async def process_color(message: types.Message, state: FSMContext):
     data = await state.get_data()
 
     # --- Сохраняем в БД
-cursor.execute('''
+    cursor.execute('''
             INSERT INTO requests 
             (user_id, city, shop, category, brand, is_custom, size, model, color, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -363,7 +363,7 @@ cursor.execute('''
             data['color'],
             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ))
-conn.commit()
+    conn.commit()
     
     await message.answer("Спасибо! Данные сохранены! Чтобы внести ещё одну — снова нажми 🚀 Нет товара.", reply_markup=start_keyboard)
     await state.finish()
