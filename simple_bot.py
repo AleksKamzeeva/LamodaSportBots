@@ -129,7 +129,7 @@ shop_keyboards = {
     for city, shops in city_shops.items()
 }
 
-categories = ["одежда", "обувь", "аксуссуары", "другая"]
+categories = ["одежда", "обувь", "аксессуары", "другая"]
 
 category_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
 category_keyboard.add(*[KeyboardButton(category) for category in categories])
@@ -291,11 +291,12 @@ async def process_shop(message: types.Message, state: FSMContext):
     
 @dp.message_handler(state=RequestForm.category)
 async def process_category(message: types.Message, state: FSMContext):
-    if message.text not in categories:
+    if message.text in categories:
+         await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
+        await RequestForm.brand.set()
+else:
         await message.reply("Пожалуйста, выбери категорию из предложенного списка.")
         return
-        await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
-        await RequestForm.brand.set()
 
 @dp.message_handler(state=RequestForm.brand)
 async def process_brand(message: types.Message, state: FSMContext):
