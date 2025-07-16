@@ -291,8 +291,8 @@ async def process_shop(message: types.Message, state: FSMContext):
     
 @dp.message_handler(state=RequestForm.category)
 async def process_category(message: types.Message, state: FSMContext):
-    if message.text not in colors:
-        await message.reply("Пожалуйста, выбери цвет из предложенного списка")
+    if message.text not in categories:
+        await message.reply("Пожалуйста, выбери категорию из предложенного списка")
         return
     
     await message.answer("Выбери бренд:", reply_markup=main_brands_keyboard)
