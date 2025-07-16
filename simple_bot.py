@@ -138,9 +138,15 @@ color_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
 color_keyboard.add(*[KeyboardButton(color) for color in colors])
 
 brands = [
-    "361",
     "adidas",
     "adidas Originals",
+     "Nike",
+     "PUMA",
+    "Reebok",
+     "Under Armour",
+    "New Balance",
+      "Peak",
+     "Hike",
     "adidas YEEZY",
     "Alo Yoga",
     "Alpha Industries",
@@ -220,8 +226,9 @@ brands = [
 ]
 
 main_brands = [
-    "Nike", "adidas", "adidas Originals", "PUMA", "Reebok",
-    "New Balance", "Vans", "The North Face", "ASICS", "Champion"
+    "adidas", "adidas Originals", "Nike",  "Reebok",  "PUMA",  "Under Armour",  "New Balance", "Peak", "Hike", "Mademan", 
+      "Champion", "On", "Sporty & Rich", "Cream Yoga", "Lacoste"
+     
 ]
 other_brands = [b for b in brands if b not in main_brands]
 
