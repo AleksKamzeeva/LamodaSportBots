@@ -272,7 +272,7 @@ async def process_city(message: types.Message, state: FSMContext):
                            reply_markup=shop_keyboards[message.text])
         await RequestForm.shop.set()
     else:
-        await message.answer("Выбери категорию:", reply_markup=main_brands_keyboard)
+        await message.answer("Выбери категорию:", reply_markup=categories_keyboard)
         await RequestForm.category.set()
 
 @dp.message_handler(state=RequestForm.shop)
@@ -286,7 +286,7 @@ async def process_shop(message: types.Message, state: FSMContext):
         return
     
     await state.update_data(shop=message.text)
-    await message.answer(f"Выбери категорию:", reply_markup=main_brands_keyboard)
+    await message.answer(f"Выбери категорию:", reply_markup=categories_keyboard)
     await RequestForm.category.set()
     
 @dp.message_handler(state=RequestForm.category)
